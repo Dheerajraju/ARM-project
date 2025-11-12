@@ -1,0 +1,38 @@
+//Distributed CAN-Enabled Industry Safety & Monitoring System
+| **Node**                              | **Function**                                            | **Component(s)**                         | **Description / Role in System**                                                                                                                                         |
+| ------------------------------------- | ------------------------------------------------------- | ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Node 1 – Obstacle Detection Node**  | Detects objects or human presence near machinery.       | 🟢 Ultrasonic Sensor (HC-SR04)           | Measures distance from machine; if a human/object is detected within a safety threshold, sends CAN warning message to stop conveyor motor.                               |
+| **Node 2 – Light / Environment Node** | Controls lighting based on ambient light level.         | 🟡 LDR (Light Dependent Resistor) Sensor | Reads brightness and sends CAN message to the Display/Control node to turn ON/OFF lights or adjust illumination.                                                         |
+| **Node 3 – Access Control Node**      | Restricts access to authorized workers only.            | 🔵 RFID Module (RC522 + Tag)             | When authorized RFID tag is scanned, sends CAN signal to Display/Control node to enable machine operation; unauthorized access keeps machine locked.                     |
+| **Node 4 – Display & Control Node**   | Displays system status and controls the conveyor motor. | 🔴 LCD + DC Motor                        | Receives CAN messages from all sensor nodes and performs actions: shows status on LCD, starts/stops motor, triggers alarm, or lights. Acts as CAN Master / Central Node. |
+
+
+//Can MEssage dlow summary
+| **Sender Node**     | **CAN Message ID** | **Receiver (Node 4)**           | **Action**                                                    |
+| ------------------- | ------------------ | ------------------------------- | ------------------------------------------------------------- |
+| Node 1 (Ultrasonic) | `0x01`             | Display & Control Node          | If obstacle detected → Stop motor + Show “Obstacle Detected”. |
+| Node 2 (LDR)        | `0x02`             | Display & Control Node          | If dark → Turn ON light (relay) + Show “Low Light Detected”.  |
+| Node 3 (RFID)       | `0x03`             | Display & Control Node          | If authorized tag → Enable motor; else → Lock access.         |
+| Node 4 (Control)    | `0x10`, `0x11`     | Other nodes (optional feedback) | Acknowledge messages, or broadcast system status.             |
+
+
+//final nodes roles
+| **Node**                        | **Microcontroller (LPC2129)** | **CAN Role**          | **Main I/O Pins**                             | **Description**                                  |
+| ------------------------------- | ----------------------------- | --------------------- | --------------------------------------------- | ------------------------------------------------ |
+| **1. Obstacle Detection Node**  | ARM7 LPC2129                  | CAN Transmitter       | P0.10 (TRIG), P0.11 (ECHO)                    | Sends CAN frame if distance < 20 cm.             |
+| **2. Light / Environment Node** | ARM7 LPC2129                  | CAN Transmitter       | P0.28 (ADC0.1 LDR)                            | Sends CAN frame if light intensity < threshold.  |
+| **3. Access Control Node**      | ARM7 LPC2129                  | CAN Transmitter       | UART pins for RFID → P0.0 (TXD0), P0.1 (RXD0) | Sends CAN frame after tag verification.          |
+| **4. Display + Control Node**   | ARM7 LPC2129                  | CAN Receiver (Master) | LCD → P1.16–P1.23, Motor → P0.7               | Receives and executes commands from other nodes. |
+
+
+//HArdware summary
+| **Common Across All Nodes** |                                            |
+| --------------------------- | ------------------------------------------ |
+| Microcontroller             | ARM7 LPC2129                               |
+| CAN Transceiver             | MCP2551                                    |
+| Crystal                     | 12 MHz                                     |
+| Power                       | 5 V DC                                     |
+| Communication               | CAN BUS (CAN_H, CAN_L + 120 Ω termination) |
+
+
+//

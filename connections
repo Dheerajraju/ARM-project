@@ -1,0 +1,42 @@
+//node1 - Obstacle detection
+| Component   | Connection                                                                                                                 
+| ----------- | --------------------------------------|
+| **LPC2129** | P0.10 → HC-SR04 TRIG
+              | P0.11 → HC-SR04 ECHO
+              | P0.25 → MCP2551 TXD
+              | P0.26 → MCP2551 RXD
+              | P0.7 → LED (motor indicator) 
+| **MCP2551** | TXD ↔ P0.25, RXD ↔ P0.26, CANH/L join bus                                                                                  |
+| **HC-SR04** | VCC 5 V, GND, TRIG=P0.10, ECHO=P0.11                                                                                       |
+| **Power**   | 5 V, GND common                                                                                                            |
+
+//node2 - light/ envirnoment
+| Component       | Connection                              
+| --------------- | ------------------------------ |
+| **LPC2129**     | P0.28 (ADC0.1) → LDR divider midpoint
+                  | P0.25 → MCP2551 TXD
+                  | P0.26 → MCP2551 RXD |
+| **LDR Circuit** | 3.3 V—LDR—ADC0.1—10 kΩ—GND                                                          |
+| **MCP2551**     | same CAN wiring as Node1                                                            |
+| **Power**       | 5 V, GND                                                                            |
+
+//node3 Access control
+| Component   | Connection                                                                                            |
+| ----------- | ----------------------------------------------------------------------------------------------------- |
+| **LPC2129** | P0.4 → Pushbutton to GND (simulate RFID authorized tag)<br>P0.25 → MCP2551 TXD<br>P0.26 → MCP2551 RXD |
+| **Pull-up** | 10 kΩ from P0.4 to 3.3 V                                                                              |
+| **MCP2551** | same CAN wiring                                                                                       |
+| **Power**   | 5 V, GND                                                                                              |
+
+//node4 Display + control
+| Pin         | Connection              | Notes                                  |
+| ----------- | ----------------------- | -------------------------------------- |
+| P1.16–P1.23 | LCD D0–D7               | 8-bit data bus                         |
+| P1.16       | LCD RS                  |                                        |
+| P1.17       | LCD EN                  |                                        |
+| P0.7        | Motor driver input (A)  |                                        |
+| P0.8        | Lamp / LED for light ON |                                        |
+| P0.25/26    | CAN → MCP2551           |                                        |
+| 5 V         | LCD VCC                 | contrast pot 10 kΩ between VCC–VEE–GND |
+
+

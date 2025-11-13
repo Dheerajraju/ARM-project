@@ -1,48 +1,33 @@
 #include <LPC21xx.h>
-#include <stdio.h>
 #include "delay.h"
 #include "lcd.h"
 #include "can.h"
 #include "ultrasonic.h"
-#include "motor.h"
 
-#define CAN_ID_OBSTACLE 0x01
-
-int main(void)
+int main()
 {
-    unsigned int dist;
-    char buf[20];
+    unsigned int d;
 
-    timer0_init();
+    IODIR1 |= 0x00FF0000 | (1<<16) | (1<<17);  
+    IODIR0 |= (1<<10);       
+    IODIR0 &= ~(1<<11);      
+
+    delay_init();
     lcd_init();
-    ultrasonic_init();
-    motor_init();
     can_init();
-
-    lcd_cmd(0x01); lcd_string("Node1: Ultrasonic"); delay_ms(800); lcd_cmd(0x01);
 
     while(1)
     {
-        dist = ultrasonic_distance_cm();
-        lcd_cmd(0x80);
-        sprintf(buf, "Dist:%ucm    ", dist);
-        lcd_string(buf);
+        d = get_distance();
 
-        if(dist != 0xFFFF && dist < 20)
-        {
-            motor_off(); // local safety
-            // send CAN alert (4 bytes example)
-            can_send_4byte(CAN_ID_OBSTACLE, 0xDE,0xAD,0x00,0x01);
-            lcd_cmd(0xC0);
-            lcd_string("Obstacle! Sent");
-        }
-        else
-        {
-            lcd_cmd(0xC0);
-            lcd_string("Clear         ");
-            motor_on();
-        }
-        delay_ms(800);
+        lcd_cmd(0x80);
+        lcd_data((d/100)+'0');
+        lcd_data(((d/10)%10)+'0');
+        lcd_data((d%10)+'0');
+
+        if(d < 20)
+            can_send(1,1);      // ID=1, data=1
+
+        delay_ms(500);
     }
-    return 0;
 }
